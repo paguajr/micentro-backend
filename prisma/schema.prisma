@@ -1,0 +1,165 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Negocio {
+  id            Int             @id @default(autoincrement())
+  slug          String          @unique
+  nombre        String
+  usaInventario Boolean         @default(false)
+  creadoEn      DateTime        @default(now())
+
+  admin         Admin?
+  recursos      Recurso[]
+  servicios     Servicio[]
+  clientes      Cliente[]
+  reservas      Reserva[]
+  productos     Producto[]
+  cierresDia    CierreDia[]
+  ventas        VentaProducto[]
+}
+
+model Admin {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  password   String
+  creadoEn   DateTime @default(now())
+
+  negocio    Negocio  @relation(fields: [negocioId], references: [id])
+  negocioId  Int      @unique
+}
+
+model Recurso {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  disponible  Boolean  @default(true)
+  creadoEn    DateTime @default(now())
+
+  negocio     Negocio  @relation(fields: [negocioId], references: [id])
+  negocioId   Int
+
+  reservas    Reserva[]
+}
+
+model Servicio {
+  id            Int      @id @default(autoincrement())
+  nombre        String
+  descripcion   String?
+  duracionMin   Int
+  precio        Decimal
+  creadoEn      DateTime @default(now())
+
+  negocio       Negocio  @relation(fields: [negocioId], references: [id])
+  negocioId     Int
+
+  reservas      Reserva[]
+}
+
+model Cliente {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  telefono    String
+  email       String?
+  creadoEn    DateTime @default(now())
+
+  negocio     Negocio  @relation(fields: [negocioId], references: [id])
+  negocioId   Int
+
+  reservas    Reserva[]
+
+  @@unique([negocioId, telefono])
+}
+
+model Reserva {
+  id                  Int                @id @default(autoincrement())
+  fecha               DateTime
+  estado              EstadoReserva      @default(VIGENTE)
+  creadoEn            DateTime           @default(now())
+
+  confirmacionEnviada Boolean            @default(false)
+  confirmacionCanal   CanalNotificacion?
+  recordatorioEnviado Boolean            @default(false)
+  recordatorioCanal   CanalNotificacion?
+
+  negocio     Negocio        @relation(fields: [negocioId], references: [id])
+  negocioId   Int
+
+  servicio    Servicio       @relation(fields: [servicioId], references: [id])
+  servicioId  Int
+
+  cliente     Cliente        @relation(fields: [clienteId], references: [id])
+  clienteId   Int
+
+  recurso     Recurso?       @relation(fields: [recursoId], references: [id])
+  recursoId   Int?
+}
+
+enum EstadoReserva {
+  VIGENTE
+  CANCELADA
+  COMPLETADA
+}
+
+enum CanalNotificacion {
+  EMAIL
+  WHATSAPP
+}
+
+model Producto {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  cantidad    Int
+  costo       Decimal
+  creadoEn    DateTime @default(now())
+
+  negocio     Negocio  @relation(fields: [negocioId], references: [id])
+  negocioId   Int
+
+  insumos     InsumoUsado[]
+  ventas      VentaProducto[]
+}
+
+model CierreDia {
+  id          Int       @id @default(autoincrement())
+  fecha       DateTime
+  creadoEn    DateTime  @default(now())
+
+  negocio     Negocio   @relation(fields: [negocioId], references: [id])
+  negocioId   Int
+
+  insumos     InsumoUsado[]
+}
+
+model InsumoUsado {
+  id            Int       @id @default(autoincrement())
+  cantidad      Int
+
+  cierreDia     CierreDia @relation(fields: [cierreDiaId], references: [id])
+  cierreDiaId   Int
+
+  producto      Producto  @relation(fields: [productoId], references: [id])
+  productoId    Int
+}
+
+model VentaProducto {
+  id          Int      @id @default(autoincrement())
+  cantidad    Int
+  precioUnit  Decimal
+  fecha       DateTime @default(now())
+
+  negocio     Negocio  @relation(fields: [negocioId], references: [id])
+  negocioId   Int
+
+  producto    Producto @relation(fields: [productoId], references: [id])
+  productoId  Int
+}
