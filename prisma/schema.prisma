@@ -33,6 +33,7 @@ model Admin {
   id         Int      @id @default(autoincrement())
   email      String   @unique
   password   String
+  activo     Boolean  @default(true)
   creadoEn   DateTime @default(now())
 
   negocio    Negocio  @relation(fields: [negocioId], references: [id])

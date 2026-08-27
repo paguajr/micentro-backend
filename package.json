@@ -13,7 +13,9 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
-    "express": "^5.2.1"
+    "bcrypt": "^6.0.0",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
     "dotenv": "^17.4.2",
@@ -24,6 +26,7 @@
     "prisma@7.9.1": true,
     "@prisma/engines@7.9.1": true,
     "esbuild@0.28.2": true,
-    "fsevents@2.3.3": true
+    "fsevents@2.3.3": true,
+    "bcrypt@6.0.0": true
   }
 }
