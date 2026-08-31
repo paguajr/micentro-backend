@@ -27,6 +27,7 @@ model Negocio {
   productos     Producto[]
   cierresDia    CierreDia[]
   ventas        VentaProducto[]
+  horarios      HorarioNegocio[]
 }
 
 model Admin {
@@ -50,6 +51,8 @@ model Recurso {
   negocioId   Int
 
   reservas    Reserva[]
+  horarios      HorarioRecurso[]
+  pausas        PausaRecurso[]
 }
 
 model Servicio {
@@ -163,4 +166,48 @@ model VentaProducto {
 
   producto    Producto @relation(fields: [productoId], references: [id])
   productoId  Int
+}
+
+enum DiaSemana {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+  SABADO
+  DOMINGO
+}
+
+model HorarioNegocio {
+  id          Int       @id @default(autoincrement())
+  diaSemana   DiaSemana
+  horaInicio  Int
+  horaFin     Int
+
+  negocio     Negocio   @relation(fields: [negocioId], references: [id])
+  negocioId   Int
+
+  @@unique([negocioId, diaSemana])
+}
+
+model HorarioRecurso {
+  id          Int       @id @default(autoincrement())
+  diaSemana   DiaSemana
+  horaInicio  Int
+  horaFin     Int
+
+  recurso     Recurso   @relation(fields: [recursoId], references: [id])
+  recursoId   Int
+
+  @@unique([recursoId, diaSemana])
+}
+
+model PausaRecurso {
+  id          Int       @id @default(autoincrement())
+  diaSemana   DiaSemana
+  horaInicio  Int
+  horaFin     Int
+
+  recurso     Recurso   @relation(fields: [recursoId], references: [id])
+  recursoId   Int
 }
