@@ -1,13 +1,29 @@
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const prisma = require('../lib/prisma');
 const {
   obtenerDisponibilidadNegocio,
   obtenerDisponibilidadRecurso,
   horaAMinutos,
 } = require('../lib/disponibilidad');
+const { normalizarTelefono } = require('../lib/telefono');
 
-router.get('/negocios/:slug/disponibilidad', async (req, res) => {
+const LIMITE_RESERVAS_VIGENTES = 3;
+
+const limiteDisponibilidad = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 30,
+  message: { error: 'Demasiadas consultas desde esta conexión. Probá de nuevo en unos minutos.' },
+});
+
+const limiteReservas = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5,
+  message: { error: 'Demasiadas reservas desde esta conexión. Probá de nuevo en unos minutos.' },
+});
+
+router.get('/negocios/:slug/disponibilidad', limiteDisponibilidad, async (req, res) => {
   try {
     const negocio = await prisma.negocio.findUnique({
       where: { slug: req.params.slug },
@@ -40,7 +56,7 @@ router.get('/negocios/:slug/disponibilidad', async (req, res) => {
   }
 });
 
-router.post('/negocios/:slug/reservas', async (req, res) => {
+router.post('/negocios/:slug/reservas', limiteReservas, async (req, res) => {
   try {
     const { servicioId, fecha, recursoId, cliente } = req.body;
 
@@ -50,6 +66,17 @@ router.post('/negocios/:slug/reservas', async (req, res) => {
         error: 'Faltan datos requeridos: servicioId, fecha, cliente.nombre y cliente.telefono son obligatorios',
       });
     }
+
+    // Validar y normalizar el teléfono a formato E.164 (+598XXXXXXXX)
+    const telefonoNormalizado = normalizarTelefono(cliente.telefono);
+
+    if (!telefonoNormalizado) {
+      return res.status(400).json({
+        error: 'El formato de teléfono no es válido. Usá 09X XXX XXX o +598 9X XXX XXX.',
+      });
+    }
+
+    cliente.telefono = telefonoNormalizado;
 
     const fechaReserva = new Date(fecha);
 
@@ -135,6 +162,19 @@ router.post('/negocios/:slug/reservas', async (req, res) => {
         });
       }
 
+      // 4.5. Verificar que el cliente no supere el límite de reservas VIGENTE en este negocio
+      const reservasVigentes = await tx.reserva.count({
+        where: {
+          negocioId: negocio.id,
+          clienteId: clienteRegistro.id,
+          estado: 'VIGENTE',
+        },
+      });
+
+      if (reservasVigentes >= LIMITE_RESERVAS_VIGENTES) {
+        throw new Error('LIMITE_RESERVAS_ALCANZADO');
+      }
+
       // 5. Crear la reserva
       const reserva = await tx.reserva.create({
         data: {
@@ -159,6 +199,10 @@ router.post('/negocios/:slug/reservas', async (req, res) => {
       SERVICIO_NO_ENCONTRADO: { status: 404, mensaje: 'Servicio no encontrado para este negocio' },
       RECURSO_NO_ENCONTRADO: { status: 404, mensaje: 'Recurso no encontrado o no disponible' },
       HORARIO_NO_DISPONIBLE: { status: 409, mensaje: 'El horario solicitado ya no está disponible' },
+      LIMITE_RESERVAS_ALCANZADO: {
+        status: 409,
+        mensaje: `Ya tenés el máximo de reservas activas permitidas (${LIMITE_RESERVAS_VIGENTES}) en este negocio`,
+      },
     };
 
     const conocido = erroresConocidos[error.message];
