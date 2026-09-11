@@ -124,6 +124,7 @@ model Producto {
   nombre      String
   cantidad    Int
   costo       Decimal
+  activo      Boolean  @default(true)
   creadoEn    DateTime @default(now())
 
   negocio     Negocio  @relation(fields: [negocioId], references: [id])

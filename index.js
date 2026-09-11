@@ -1,6 +1,7 @@
 const express = require('express');
 const adminRoutes = require('./routes/admin');
 const publicoRoutes = require('./routes/publico');
+const productosRouter = require('./routes/productos');
 
 const app = express();
 const PORT = 3000;
@@ -18,6 +19,7 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+app.use('/api/admin/productos', productosRouter);
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicoRoutes);
 
