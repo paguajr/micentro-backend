@@ -25,8 +25,9 @@ model Negocio {
   clientes      Cliente[]
   reservas      Reserva[]
   productos     Producto[]
-  cierresDia    CierreDia[]
   ventas        VentaProducto[]
+  compras       CompraStock[]
+  insumosUsados InsumoUsado[]
   horarios      HorarioNegocio[]
 }
 
@@ -130,38 +131,40 @@ model Producto {
   negocio     Negocio  @relation(fields: [negocioId], references: [id])
   negocioId   Int
 
-  insumos     InsumoUsado[]
-  ventas      VentaProducto[]
-}
-
-model CierreDia {
-  id          Int       @id @default(autoincrement())
-  fecha       DateTime
-  creadoEn    DateTime  @default(now())
-
-  negocio     Negocio   @relation(fields: [negocioId], references: [id])
-  negocioId   Int
-
-  insumos     InsumoUsado[]
-
-  @@unique([negocioId, fecha])
+  insumosUsados InsumoUsado[]
+  ventas        VentaProducto[]
+  compras       CompraStock[]
 }
 
 model InsumoUsado {
-  id            Int       @id @default(autoincrement())
-  cantidad      Int
+  id          Int      @id @default(autoincrement())
+  cantidad    Int
+  fecha       DateTime @default(now())
 
-  cierreDia     CierreDia @relation(fields: [cierreDiaId], references: [id])
-  cierreDiaId   Int
+  negocio     Negocio  @relation(fields: [negocioId], references: [id])
+  negocioId   Int
 
-  producto      Producto  @relation(fields: [productoId], references: [id])
-  productoId    Int
+  producto    Producto @relation(fields: [productoId], references: [id])
+  productoId  Int
 }
 
 model VentaProducto {
   id          Int      @id @default(autoincrement())
   cantidad    Int
   precioUnit  Decimal
+  fecha       DateTime @default(now())
+
+  negocio     Negocio  @relation(fields: [negocioId], references: [id])
+  negocioId   Int
+
+  producto    Producto @relation(fields: [productoId], references: [id])
+  productoId  Int
+}
+
+model CompraStock {
+  id          Int      @id @default(autoincrement())
+  cantidad    Int
+  costoTotal  Decimal?
   fecha       DateTime @default(now())
 
   negocio     Negocio  @relation(fields: [negocioId], references: [id])

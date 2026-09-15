@@ -3,7 +3,9 @@ const adminRoutes = require('./routes/admin');
 const publicoRoutes = require('./routes/publico');
 const productosRouter = require('./routes/productos');
 const ventasRouter = require('./routes/ventas');
-const cierresRouter = require('./routes/cierres');
+const insumosUsadosRouter = require('./routes/insumos-usados');
+const comprasRouter = require('./routes/compras');
+const estadisticasRouter = require('./routes/estadisticas');
 
 const app = express();
 const PORT = 3000;
@@ -23,7 +25,9 @@ app.get('/api/test', (req, res) => {
 
 app.use('/api/admin/productos', productosRouter);
 app.use('/api/admin/ventas', ventasRouter);
-app.use('/api/admin/cierres', cierresRouter);
+app.use('/api/admin/insumos-usados', insumosUsadosRouter);
+app.use('/api/admin/compras', comprasRouter);
+app.use('/api/admin/estadisticas', estadisticasRouter);
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicoRoutes);
 
