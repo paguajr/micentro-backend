@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
 const verificarAdmin = require('../middleware/auth');
+const { marcarReservasVencidasComoCompletadas } = require('../lib/reservas');
 
 router.use(verificarAdmin);
 
@@ -106,6 +107,10 @@ async function calcularTotales(negocioId, inicio, fin) {
 // fecha es opcional; por defecto es hoy.
 router.get('/dia', async (req, res) => {
   try {
+    // Corrige el estado de reservas vencidas antes de calcular totales,
+    // para que el resumen del día refleje COMPLETADA sin demora de espera.
+    await marcarReservasVencidasComoCompletadas(req.negocioId);
+
     const fechaBase = req.query.fecha ? new Date(req.query.fecha) : new Date();
     const { inicio, fin } = rangoDelDia(fechaBase);
 
@@ -123,6 +128,9 @@ router.get('/dia', async (req, res) => {
 // Si no se manda nada, el default es el mes calendario actual.
 router.get('/rango', async (req, res) => {
   try {
+    // Misma corrección lazy que en /dia, antes de agregar cualquier total.
+    await marcarReservasVencidasComoCompletadas(req.negocioId);
+
     const { desde, hasta, periodo, fecha } = req.query;
 
     let inicio;

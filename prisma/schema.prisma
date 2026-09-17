@@ -113,6 +113,7 @@ enum EstadoReserva {
   VIGENTE
   CANCELADA
   COMPLETADA
+  AUSENTE
 }
 
 enum CanalNotificacion {

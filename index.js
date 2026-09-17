@@ -6,6 +6,7 @@ const ventasRouter = require('./routes/ventas');
 const insumosUsadosRouter = require('./routes/insumos-usados');
 const comprasRouter = require('./routes/compras');
 const estadisticasRouter = require('./routes/estadisticas');
+const reservasRouter = require('./routes/reservas');
 
 const app = express();
 const PORT = 3000;
@@ -28,6 +29,7 @@ app.use('/api/admin/ventas', ventasRouter);
 app.use('/api/admin/insumos-usados', insumosUsadosRouter);
 app.use('/api/admin/compras', comprasRouter);
 app.use('/api/admin/estadisticas', estadisticasRouter);
+app.use('/api/admin/reservas', reservasRouter);
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicoRoutes);
 
